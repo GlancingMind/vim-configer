@@ -1,3 +1,3 @@
 
 command! -complete=dir -nargs=* ConfigerEditConfig
-            \ call Configer#EditConfig(<q-args>)
+            \ execute 'edit' Configer#GetConfig(<q-args>)
