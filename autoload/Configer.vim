@@ -32,19 +32,23 @@ function! s:IsAbsolutePath(path)
     return nr2char(strgetchar(a:path, 0)) ==? '/'
 endfunction
 
-function! s:StripFilename(path)
-    return filereadable(a:path) ? fnamemodify(a:path, ':h') : a:path
-endfunction
-
 " ====    PUBLIC FUNCTIONS    ====
 
+"TODO get all files from storage that match cwd
+"TODO breath-first traversal on all found files and source them
+"TODO add option to store files relative to project config
 function! Configer#GetConfig(...)
-    let l:storage = get(a:, 1, g:Configer_DefaultStoragePath)
-    let l:config = get(a:, 2, g:Configer_DefaultLookupPath)
+    let l:config = get(a:, 1, g:Configer_DefaultLookupPath)
+    let l:storage = get(a:, 2, g:Configer_DefaultStoragePath)
     let l:configname = g:Configer_ConfigFilename
     "need cwd when path is relative to distinguish relative from absolut paths
     let l:cwd = s:IsAbsolutePath(l:config) ? '' : getcwd()
     return resolve(l:storage.'/'.l:cwd.'/'.l:config.'/'.l:configname)
+endfunction
+
+function! Configer#ListConfigsInStorage(...)
+    let l:storage = get(a:, 1, g:Configer_DefaultStoragePath)
+    return getcompletion(l:storage.'/**/'.g:Configer_ConfigFilename, 'file')
 endfunction
 
 " ====  TEST FUNCTIONS  ====
