@@ -1,3 +1,3 @@
 
-command! -complete=dir -nargs=* ConfigerEditConfig
-            \ execute 'edit' Configer#GetConfig(<q-args>)
+command! -complete=dir -nargs=* ConfigerEditLocalConfig
+            \ execute 'edit' Configer#GetConfig(<f-args>)
