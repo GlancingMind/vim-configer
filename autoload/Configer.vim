@@ -55,6 +55,13 @@ function! Configer#ListConfigsInStorage(...)
     return filter(l:configs, 'filereadable(v:val)')
 endfunction
 
+function! Configer#ListProjectRootsInStorage(...)
+    let l:storage = get(a:, 1, g:Configer_DefaultStoragePath)
+    let l:name = g:Configer_ProjectIndicatorFilename
+    let l:files = getcompletion(l:storage.'/**/'.l:name, 'file')
+    return filter(l:files, 'filereadable(v:val)')
+endfunction
+
 "TODO need to call :source, maybe save settings via save_cpo beforehand?
 function! Configer#Load(...)
     let l:config = get(a:, 1, g:Configer_DefaultLookupPath)
