@@ -1,6 +1,6 @@
 
 let g:Configer_DefaultStoragePath = get(g:, 'Configer_ConfigStoragePath', 'vimconfig')
-let g:Configer_ProjectIndicatorFilename = get(g:, 'Configer_ProjectIndicatorFilename', '.ConfigerProjectIndicator')
+let g:Configer_ProjectIndicatorFilename = get(g:, 'Configer_ProjectIndicatorFilename', '.ConfigerProjectRootIndicator')
 
 let g:Configer_ConfigStorageUseAbsolutePathes = get(g:, 'Configer_ConfigStorageUseAbsolutePathes', 1)
 
