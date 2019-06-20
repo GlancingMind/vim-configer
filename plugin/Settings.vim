@@ -5,5 +5,5 @@ let g:Configer_ConfigStorageUseAbsolutePathes = get(g:, 'Configer_ConfigStorageU
 
 let g:Configer_ConfigFilename = get(g:, 'Configer_ConfigGlobes', 'vimrc')
 
-let g:Configer_DefaultLookupPath = get(g:, 'Configer_DefaultLookupPath', '.')
+let g:Configer_DefaultLookupPath = get(g:, 'Configer_DefaultLookupPath', expand('%:p:h'))
 
