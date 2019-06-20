@@ -33,15 +33,19 @@ function! s:GetAllConfigsOnInConfigPath(config)
     return l:paths
 endfunction
 
+function! s:ResolvePathToStorage(config, storage)
+    "need cwd when path is relative to distinguish relative from absolut paths
+    let l:cwd = s:IsAbsolutePath(a:config) ? '' : getcwd()
+    return resolve(a:storage.'/'.l:cwd.'/'.a:config)
+endfunction
+
 " ====    PUBLIC FUNCTIONS    ====
 
 function! Configer#GetConfig(...)
     let l:config = get(a:, 1, g:Configer_DefaultLookupPath)
     let l:storage = get(a:, 2, g:Configer_DefaultStoragePath)
     let l:configname = g:Configer_ConfigFilename
-    "need cwd when path is relative to distinguish relative from absolut paths
-    let l:cwd = s:IsAbsolutePath(l:config) ? '' : getcwd()
-    return resolve(l:storage.'/'.l:cwd.'/'.l:config.'/'.l:configname)
+    return s:ResolvePathToStorage(l:config, l:storage).'/'.l:configname
 endfunction
 
 function! Configer#ListConfigsInStorage(...)
@@ -67,8 +71,9 @@ endfunction
 "create a project indicator file for given directory in storage to mark this
 "directory as a project root
 function! Configer#DefineDirAsProject(dir)
-    let l:indicatorfile = a:dir.'/'.g:Configer_ProjectIndicatorFilename
-    echomsg l:indicatorfile
+    let l:dir = s:ResolvePathToStorage(a:dir, g:Configer_DefaultStoragePath)
+    let l:indicatorfile = l:dir.'/'.g:Configer_ProjectIndicatorFilename
+    echomsg 'Mark '.l:indicatorfile.' as project root'
     call writefile([''], l:indicatorfile, 's')
 endfunction
 
