@@ -1,22 +1,3 @@
-"TODO add option to store files relative to project config
-"or create import project config storage which remapes config pathes to new
-"cwd
-
-"TODO
-"when user hase a relative storage path, don't use an absolute path for conf
-"only when user stores vimconf outside of project use absolute paths
-"e.g. vimconf/home/sascha/workspace/.../autoload -> vimconf/autoload
-"
-"Store config in global setting or local setting dir
-"global means absolute config path
-"local means relative to nearest vimconf directory which is mostly cwd for
-"projects
-"
-"Define multiple Storage directories to look for e.g. cwd, in root,...
-"Give an option to disable this behaviour
-"
-"Create function like checkpath e.g. checkproject
-
 augroup Configer_CreatePathWhenNotExists
     autocmd!
     execute 'autocmd! BufWritePre '.g:Configer_DefaultStoragePath.'/**
@@ -77,9 +58,28 @@ function! Configer#Load(...)
     let l:config = Configer#GetConfig(l:config, l:storage)
     for l:config in s:GetAllConfigsOnInConfigPath(l:config)
         echomsg 'Loading:   '.l:config
+        "should only source configs which are diffrent from previous sources
         "source l:config
         echomsg 'Loaded:    '.l:config
     endfor
+endfunction
+
+"create a project indicator file for given directory in storage to mark this
+"directory as a project root
+function! Configer#DefineDirAsProject(dir)
+    let l:indicatorfile = a:dir.'/'.g:Configer_ProjectIndicatorFilename
+    echomsg l:indicatorfile
+    call writefile([''], l:indicatorfile, 's')
+endfunction
+
+"TODO could create an export function which saves configs to new directory or
+"symlinks projectroot in config storage to project
+"TODO save a file with project cwds in storage -> makes it possible to recalc
+"paths
+function! Configer#Import(storage)
+    "determine new project cwd
+    "determine old project cwd
+    "copy old projectfiles and hierarchy into new cwd
 endfunction
 
 " ====  TEST FUNCTIONS  ====
