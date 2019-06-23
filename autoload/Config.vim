@@ -31,7 +31,7 @@ function! s:Config.GetClosest(path) dict
     if a:path !=# l:path
         return extend([l:path], self.GetClosest(l:path))
     endif
-    return [l:path]
+    return []
 endfunction
 
 function! s:Config.GetSettings(path) dict
