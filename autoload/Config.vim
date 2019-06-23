@@ -29,9 +29,9 @@ endfunction
 function! s:Config.GetClosest(path) dict
     let l:path = fnamemodify(a:path, ':h')
     if a:path !=# l:path
-        return extend([l:path], self.GetClosest(l:path))
+        return extend([a:path], self.GetClosest(l:path))
     endif
-    return []
+    return [l:path]
 endfunction
 
 function! s:Config.GetSettings(path) dict
