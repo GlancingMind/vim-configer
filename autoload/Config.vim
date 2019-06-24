@@ -5,6 +5,14 @@ let s:Config = {
             \'configs': []
             \}
 
+function! s:GetAllPossiblePaths(path)
+    let l:path = fnamemodify(a:path, ':h')
+    if a:path !=# l:path
+        return extend([a:path], s:GetAllPossiblePaths(l:path))
+    endif
+    return [l:path]
+endfunction
+
 function! Config#Load(path)
     if filereadable(a:path)
         let l:self = copy(s:Config)
@@ -26,12 +34,20 @@ function! s:Config.List() dict
     return keys(self.configs)
 endfunction
 
+function! s:Config.GetAllConfigsForPath(path) dict
+    let l:configs = []
+    for l:path in s:GetAllPossiblePaths(resolve(a:path))
+        call extend(l:configs, get(self.configs, l:path, []))
+    endfor
+    return l:configs
+endfunction
+
 function! s:Config.GetClosest(path) dict
-    let l:path = fnamemodify(a:path, ':h')
-    if a:path !=# l:path
-        return extend([a:path], self.GetClosest(l:path))
-    endif
-    return [l:path]
+    for l:path in s:GetAllPossiblePaths(resolve(a:path))
+        if has_key(self.configs, l:path)
+            return l:path
+        endif
+    endfor
 endfunction
 
 function! s:Config.GetSettings(path) dict
