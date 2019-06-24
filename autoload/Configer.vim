@@ -1,3 +1,6 @@
+let s:save_cpo = &cpo
+set cpo&vim
+
 augroup Configer_CreatePathWhenNotExists
     autocmd!
     execute 'autocmd! BufWritePre '.g:Configer_DefaultStoragePath.'/**
@@ -55,44 +58,20 @@ function! Configer#ListConfigsInStorage(...)
     return filter(l:configs, 'filereadable(v:val)')
 endfunction
 
-function! Configer#ListProjectRootsInStorage(...)
-    let l:storage = get(a:, 1, g:Configer_DefaultStoragePath)
-    let l:name = g:Configer_ProjectIndicatorFilename
-    let l:files = getcompletion(l:storage.'/**/'.l:name, 'file')
-    return filter(l:files, 'filereadable(v:val)')
-endfunction
-
-"TODO need to call :source, maybe save settings via save_cpo beforehand?
 function! Configer#Load(...)
     let l:config = get(a:, 1, g:Configer_DefaultLookupPath)
     let l:storage = get(a:, 2, g:Configer_DefaultStoragePath)
     let l:config = Configer#GetConfig(l:config, l:storage)
     for l:config in s:GetAllConfigsOnInConfigPath(l:config)
         echomsg 'Loading:   '.l:config
+        "TODO need to call :source, maybe save settings via save_cpo beforehand
         "should only source configs which are diffrent from previous sources
         "source l:config
         echomsg 'Loaded:    '.l:config
     endfor
 endfunction
 
-"create a project indicator file for given directory in storage to mark this
-"directory as a project root
-function! Configer#DefineDirAsProject(dir)
-    let l:dir = s:ResolvePathToStorage(a:dir, g:Configer_DefaultStoragePath)
-    let l:indicatorfile = l:dir.'/'.g:Configer_ProjectIndicatorFilename
-    echomsg 'Mark '.l:indicatorfile.' as project root'
-    call writefile([''], l:indicatorfile, 's')
-endfunction
-
-"TODO could create an export function which saves configs to new directory or
-"symlinks projectroot in config storage to project
-"TODO save a file with project cwds in storage -> makes it possible to recalc
-"paths
-function! Configer#Import(storage)
-    "determine new project cwd
-    "determine old project cwd
-    "copy old projectfiles and hierarchy into new cwd
-endfunction
+"TODO source resource only relevant configs
 
 " ====  TEST FUNCTIONS  ====
 
@@ -104,3 +83,6 @@ endfunction
 "        echomsg 'got: '.Configer#GetConfig(l:path, g:Configer_DefaultStoragePath)
 "    endfor
 "endfunction
+
+let &cpo = s:save_cpo
+unlet s:save_cpo
