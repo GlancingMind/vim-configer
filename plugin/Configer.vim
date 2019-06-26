@@ -13,6 +13,7 @@ let g:Configer_DefaultStoragePath = get(g:, 'Configer_ConfigStoragePath', 'vimco
 
 let g:Configer_ConfigStorageUseAbsolutePathes = get(g:, 'Configer_ConfigStorageUseAbsolutePathes', 1)
 
+"TODO maybe rename Filename to Glob
 let g:Configer_ConfigFilename = get(g:, 'Configer_ConfigGlobes', 'vimrc')
 
 let g:Configer_DefaultLookupPath = get(g:, 'Configer_DefaultLookupPath', expand('%:p:h'))
@@ -22,8 +23,7 @@ let g:Configer_DefaultLookupPath = get(g:, 'Configer_DefaultLookupPath', expand(
 
 "TODO use ! to create path and without to select only existing ones
 "or complete directories and configs
-command! -complete=dir -nargs=* ConfigerEditConfig
-            \ execute 'edit' Configer#GetConfig(<f-args>)
+command! -complete=dir -nargs=* ConfigerEditConfig call Configer#ConfigEdit(<f-args>)
 
 let &cpo = s:save_cpo
 unlet s:save_cpo

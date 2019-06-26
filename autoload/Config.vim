@@ -1,4 +1,5 @@
-"Uses this https://stackoverflow.com/questions/31348782/how-do-i-serialize-a-variable-in-vimscript
+let s:save_cpo = &cpo
+set cpo&vim
 
 let s:Config = {
             \'root': '',
@@ -14,18 +15,16 @@ function! s:GetAllPossiblePaths(path)
 endfunction
 
 function! Config#Load(path)
+    let l:self = copy(s:Config)
+    let l:self.root = a:path
     if filereadable(a:path)
-        let l:self = copy(s:Config)
-        let l:self.root = a:path
         execute "let l:self.configs = ".readfile(a:path)[0]
-        return l:self
     endif
-    echohl ErrorMsg
-    echomsg string(a:path).' not readable!'
-    echohl None
+    return l:self
 endfunction
 
-function! s:Config.Save(config) dict
+function! s:Config.Save(configs) dict
+    let self.configs = configs
     let l:serialize = string(self.configs)
     call writefile([serialize], self.path)
 endfunction
@@ -53,3 +52,6 @@ endfunction
 function! s:Config.GetSettings(path) dict
     return get(self.configs, resolve(a:path), [])
 endfunction
+
+let &cpo = s:save_cpo
+unlet s:save_cpo
