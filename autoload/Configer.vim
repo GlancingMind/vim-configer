@@ -4,45 +4,46 @@ set cpo&vim
 "if a configfile with the same or another name must exists, vimgrep always
 "greps for rootpath for matching
 
-"maybe use bufferlocal autocmd for write as file does not always exist
-execute 'au! BufWriteCmd '.g:Configer_ConfigFilename.' call s:SaveConfig()'
+execute 'au! BufWriteCmd *.'.g:Configer_ConfigFilename.' call s:SaveConfig()'
 
 function! s:SaveConfig()
     echomsg 'saving config'
-    let l:lines = getline(0, '$')
-    s:GetConfig().save(l:lines)
+    let l:settings = getline(0, '$')
+    let l:config = Config#Load(s:GetConfigPath())
+    let l:config.Save(l:settings, g:Configer_DefaultLookupPath)
     set nomodified
 endfunction
 
-""TODO might not be needed anymore
-"function! s:IsAbsolutePath(path)
-"    return nr2char(strgetchar(a:path, 0)) ==? '/'
-"endfunction
-"
-""TODO might not be needed anymore
-"function! s:ResolvePathToStorage(config, storage)
-"    "need cwd when path is relative to distinguish relative from absolut paths
-"    let l:cwd = s:IsAbsolutePath(a:config) ? '' : getcwd()
-"    return resolve(a:storage.'/'.l:cwd.'/'.a:config)
-"endfunction
+function! s:GetConfigPath(...)
+    "let l:config = get(a:, 1, g:Configer_DefaultLookupPath)
+    "let l:storage = get(a:, 2, g:Configer_DefaultStoragePath)
 
-"TODO might need similar to GetCloses()
-function! s:GetConfig(...)
-    let l:config = get(a:, 1, g:Configer_DefaultLookupPath)
-    let l:storage = get(a:, 2, g:Configer_DefaultStoragePath)
-    return Config#Load(l:storage.'/'.g:Configer_ConfigFilename)
+    let l:storage = g:Configer_DefaultStorageGlob
+    let l:configfile = fnamemodify(getcwd(), ':t')
+    let l:config = Config#Load(l:storage.'/'.l:configfile)
+    "TODO replace concat with glob() function!
+    return l:storage.'/'.g:Configer_ConfigFilename
+endfunction
+
+function! s:RemoveTrailingEmptyLines(list)
+    for l:item in reverse(a:list)
+        if !empty(l:item)
+            break
+        endif
+        call remove(a:list, index(a:list, l:item))
+    endfor
+    return a:list
 endfunction
 
 " ====    PUBLIC FUNCTIONS    ====
 
 function! Configer#ConfigEdit(...)
-    "let l:config = s:GetConfig(a:)
-    "TODO adjust paths for Load and GetSettings
-    let l:config = Config#Load('testconfig')
-    let l:settings = l:config.GetSettings('autoload')
-    let l:path = expand('%:h').'.'.g:Configer_ConfigFilename
+    let l:config = Config#Load(s:GetConfigPath())
+    let l:dir = expand('%:h')
+    let l:settings = l:config.GetSettings(l:dir)
+    call s:RemoveTrailingEmptyLines(l:settings)
     "open buffer and put settings into buffer
-    execute 'edit '.l:path
+    execute 'edit '.l:dir.'.'.g:Configer_ConfigFilename
     normal! ggdG
     setlocal filetype=vim
     call append(0, l:settings)

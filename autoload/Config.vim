@@ -3,7 +3,7 @@ set cpo&vim
 
 let s:Config = {
             \'root': '',
-            \'configs': []
+            \'configs': {}
             \}
 
 function! s:GetAllPossiblePaths(path)
@@ -23,10 +23,14 @@ function! Config#Load(path)
     return l:self
 endfunction
 
-function! s:Config.Save(configs) dict
-    let self.configs = configs
+function! s:Config.Save(settings, path) dict
+    let self.configs[a:path] = a:settings
     let l:serialize = string(self.configs)
-    call writefile([serialize], self.path)
+    call writefile([serialize], self.root)
+endfunction
+
+function! s:Config.GetSettings(path) dict
+    return get(self.configs, resolve(a:path), [])
 endfunction
 
 function! s:Config.List() dict
@@ -47,10 +51,6 @@ function! s:Config.GetClosest(path) dict
             return l:path
         endif
     endfor
-endfunction
-
-function! s:Config.GetSettings(path) dict
-    return get(self.configs, resolve(a:path), [])
 endfunction
 
 let &cpo = s:save_cpo
