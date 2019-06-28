@@ -9,11 +9,11 @@ set cpo&vim
 
 "   ==== SETTINGS
 
-let g:Configer_DefaultStorageGlob = get(g:, 'Configer_ConfigStoragePath', 'vimconfig')
+let g:Configer_DefaultStorage = get(g:, 'Configer_ConfigStoragePath', 'vimconfig')
 
 let g:Configer_DefaultLookupPath = get(g:, 'Configer_DefaultLookupPath', expand('%:h'))
 
-let g:Configer_ConfigFilename = get(g:, 'Configer_ConfigFilename', 'vimrc')
+let g:Configer_ConfigFilename = get(g:, 'Configer_ConfigFilename', fnamemodify(getcwd(), ':t'))
 
 
 "   ==== COMMANDS

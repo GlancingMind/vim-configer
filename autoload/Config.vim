@@ -29,6 +29,10 @@ function! s:Config.Save(settings, path) dict
     call writefile([serialize], self.root)
 endfunction
 
+function! s:Config.Apply() dict
+    "TODO source this config
+endfunction
+
 function! s:Config.GetSettings(path) dict
     return get(self.configs, resolve(a:path), [])
 endfunction
