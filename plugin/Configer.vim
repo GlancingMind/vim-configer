@@ -20,6 +20,8 @@ command! -complete=dir -nargs=* ConfigerEditConfig call Configer#ConfigEdit(<f-a
 
 "   ==== AUTOCMDS
 
+"TODO need autocmd for reloading and applying new settings to existing buffers
+
 augroup vim-configer
     autocmd!
     "This parses the config even on switching

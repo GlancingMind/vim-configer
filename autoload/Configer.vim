@@ -4,13 +4,10 @@ set cpo&vim
 "if a configfile with the same or another name must exists, vimgrep always
 "greps for rootpath for matching
 
-"TODO use bufferlocal autogroup
-execute 'au! BufWriteCmd *.'.g:Configer_ConfigFilename.' call s:SaveConfig()'
-
-function! s:SaveConfig()
+function! s:SaveConfig(path)
     let l:settings = getline(0, '$')
     let l:config = Config#Load(g:Configer_DefaultStorage.'/'.g:Configer_ConfigFilename)
-    call l:config.Save(l:settings, expand('%:h'))
+    call l:config.Save(l:settings, a:path)
     set nomodified
 endfunction
 
@@ -24,27 +21,41 @@ function! s:RemoveTrailingEmptyLines(list)
     return a:list
 endfunction
 
+function! s:RemoveTrailingEmptyLinesFromBuffer()
+    while empty(line('$'))
+        echomsg 'delete trailing line'
+        execute line('$').' delete _'
+    endwhile
+endfunction
+
 " ====    PUBLIC FUNCTIONS    ====
 
 function! Configer#ConfigEdit(...)
     let l:config = Config#Load(g:Configer_DefaultStorage.'/'.g:Configer_ConfigFilename)
-    let l:settings = l:config.GetSettings(expand('%:h'))
-    call s:RemoveTrailingEmptyLines(l:settings)
-    "open buffer and put settings into buffer
-    execute 'edit '.expand('%:h').'.'.g:Configer_ConfigFilename
+    let l:path = expand('%:h').'.'.g:Configer_ConfigFilename
+    let l:settings = l:config.GetSettings(l:path)
+    execute 'edit '.l:path
     normal! ggdG
-    setlocal filetype=vim
     call append(0, l:settings)
+    call s:RemoveTrailingEmptyLinesFromBuffer()
     normal gg
-    set nomodified
+    "clear undo history to prevent user from undo append(0, l:settings)
+    "see :h clear-undo
+    let l:old_undolevels = &undolevels
+    setlocal undolevels=-1
+    execute "normal a \<BS>\<Esc>"
+    let &undolevels = l:old_undolevels
+    setlocal nomodified
+    setlocal noswapfile
+    setlocal buftype=acwrite
+    setlocal filetype=vim
+    execute 'au! BufWriteCmd <buffer> call s:SaveConfig("'.l:path.'")'
 endfunction
 
 function! Configer#ApplyConfig()
     let l:config = Config#Load(g:Configer_DefaultStorage.'/'.g:Configer_ConfigFilename)
-    for l:setting in l:config.GetSettings(expand('%:h'))
-        "TODO it seems that the same setting applies to all configs...
-        "TODO settings are only working when they apply on startup
-        echomsg l:setting
+    let l:path = expand('%:h').'.'.g:Configer_ConfigFilename
+    for l:setting in l:config.GetSettings(l:path)
         execute l:setting
     endfor
 endfunction
