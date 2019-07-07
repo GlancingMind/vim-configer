@@ -1,5 +1,5 @@
-let s:config = {
+let s:Config = {
             \'root': expand('%')
             \}
 
-call Prototype#RegisterConfig(s:config)
+call Prototype#RegisterConfig(s:Config)
