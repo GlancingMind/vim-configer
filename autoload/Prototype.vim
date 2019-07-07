@@ -1,3 +1,5 @@
+let s:config = {}
+
 function! s:CreateFunction(name, settings)
     "wrap settings in function body
     let l:section = ['function! '.a:name.'()']
@@ -5,9 +7,21 @@ function! s:CreateFunction(name, settings)
     return add(l:section, 'endfunction')
 endfunction
 
-function! Configer#Save()
-    let l:name = 'beepboop'
-    let l:settings = ['set nonumber', 'echomsg "hello"']
-    let l:section = s:CreateFunction(l:name, l:settings)
-    call writefile(l:section, 'config')
+function! Prototype#RegisterConfig(config)
+    echomsg 'Registered: '.a:config.root
+    let s:config = a:config
 endfunction
+
+function! Prototype#Load()
+    source 'config.vim'
+endfunction
+
+function! Prototype#Save()
+    let l:template = readfile('templates/Config.vim')
+    let l:name = 'Beep'
+    let l:settings = ['setlocal nonumber', 'echomsg "hello"']
+    let l:section = s:CreateFunction(l:name, l:settings)
+    let l:config = l:template + [''] + l:section
+    call writefile(l:config, 'config.vim')
+endfunction
+
