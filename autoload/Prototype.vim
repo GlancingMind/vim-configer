@@ -1,8 +1,9 @@
 let s:Config = {}
 
-function! s:SerializeSection(name, settings)
+function! s:SerializeSection(name, path, settings)
     "wrap settings in function body
     return ['function! s:'.a:name.'()'] + a:settings + ['endfunction']
+                \+ ['call Prototype#RegisterFunction("'.a:path.'", funcref("s:'.a:name.'"))']
 endfunction
 
 function! s:SerializeConfig(config)
@@ -11,8 +12,7 @@ function! s:SerializeConfig(config)
         let l:name = l:section.name
         let l:path = l:section.path
         let l:settings = l:section.settings
-        let l:register = 'call Prototype#RegisterFunction("'.l:path.'",funcref("s:'.l:name.'"))'
-        let l:sections += s:SerializeSection(l:name, l:settings) + [l:register]
+        let l:sections += s:SerializeSection(l:name, l:path, l:settings)
     endfor
     return l:sections
 endfunction
