@@ -2,16 +2,13 @@ let s:Config = {}
 
 function! s:SerializeSection(name, settings)
     "wrap settings in function body
-    return ['function! '.a:name.'()'] + a:settings + ['endfunction']
+    return ['function! s:'.a:name.'()'] + a:settings + ['endfunction']
 endfunction
 
-"TODO maybe remove template and instead init s:Config, which will be
-"serialized
 function! s:SerializeConfig(config)
-    "let l:config = ['let s:Config = '.string(a:config)]
     let l:sections = []
     for [l:name, l:settings] in items(a:config)
-        let l:register = 'call Prototype#RegisterFunction(funcref("'.l:name.'"))'
+        let l:register = 'call Prototype#RegisterFunction(funcref("s:'.l:name.'"))'
         let l:sections += s:SerializeSection(l:name, l:settings) + [l:register]
     endfor
     return l:sections
