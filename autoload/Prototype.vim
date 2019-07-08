@@ -7,8 +7,11 @@ endfunction
 
 function! s:SerializeConfig(config)
     let l:sections = []
-    for [l:name, l:settings] in items(a:config)
-        let l:register = 'call Prototype#RegisterFunction(funcref("s:'.l:name.'"))'
+    for l:section in a:config
+        let l:name = l:section.name
+        let l:path = l:section.path
+        let l:settings = l:section.settings
+        let l:register = 'call Prototype#RegisterFunction("'.l:path.'",funcref("s:'.l:name.'"))'
         let l:sections += s:SerializeSection(l:name, l:settings) + [l:register]
     endfor
     return l:sections
@@ -19,8 +22,8 @@ function! Prototype#RegisterConfig(config)
     let s:config = a:config
 endfunction
 
-function! Prototype#RegisterFunction(function)
-    echomsg a:function
+function! Prototype#RegisterFunction(path, function)
+    echomsg a:path a:function
     call a:function()
 endfunction
 
@@ -29,7 +32,16 @@ function! Prototype#Load()
 endfunction
 
 function! Prototype#Save()
-    let l:config = {'Beep': ['echomsg "hello"'], 'Boop': ['echomsg "world"']}
+    let l:config = [
+                \{
+                    \'name': 'beep',
+                    \'path': '/hello/beep',
+                    \'settings': ['echomsg "hello"']
+                \}, {
+                    \'name': 'blub',
+                    \'path': '/blub/world',
+                    \'settings': ['echomsg "world"']
+                \}]
     let l:template = readfile('templates/Config.vim')
     let l:config = s:SerializeConfig(l:config)
     call writefile(l:config, 'config.vim')
