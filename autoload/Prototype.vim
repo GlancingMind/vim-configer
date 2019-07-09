@@ -1,9 +1,11 @@
 let s:Config = {}
 
 function! s:SerializeSection(name, path, settings)
-    "wrap settings in function body
-    return ['function! s:'.a:name.'()'] + a:settings + ['endfunction']
-                \+ ['call Prototype#RegisterFunction("'.a:path.'", funcref("s:'.a:name.'"))']
+    "wrap settings in function body and add callback
+    let l:config = '{"name": "'.a:name.'", "path": "'.a:path.'", "Apply": funcref("s:'.a:name.'"), "start": s:start, "end": expand("<slnum>")}'
+    return ['let s:start = expand("<slnum>")']
+                \+ ['function! s:'.a:name.'()'] + a:settings + ['endfunction']
+                \+ ['call Prototype#Register('.l:config.')']
 endfunction
 
 function! s:SerializeConfig(config)
@@ -17,14 +19,10 @@ function! s:SerializeConfig(config)
     return l:sections
 endfunction
 
-function! Prototype#RegisterConfig(config)
-    echomsg 'Registered: '.a:config.root
-    let s:config = a:config
-endfunction
-
-function! Prototype#RegisterFunction(path, function)
-    echomsg a:path a:function
-    call a:function()
+function! Prototype#Register(config)
+    echomsg 'Registered:' a:config.name 'for' a:config.path 'from' a:config.start 'to' a:config.end
+    call a:config.Apply()
+    "let s:config = a:config
 endfunction
 
 function! Prototype#Load()
