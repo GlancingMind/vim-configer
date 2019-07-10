@@ -4,8 +4,8 @@ function! s:SerializeSection(name, path, settings)
     let l:config = '{
                 \"name": "'.a:name.'", "path": "'.a:path.'",
                 \"Apply": funcref("s:'.a:name.'"),
-                \"settings": s:lines[s:start+1:expand("<slnum>")-3],
-                \"start": s:start, "end": expand("<slnum>")}'
+                \"settings": s:lines[s:start+1:expand("<slnum>")-3]
+                \}'
     return ['let s:start = expand("<slnum>")']
                 \+ ['function! s:'.a:name.'()'] + a:settings + ['endfunction']
                 \+ ['call Prototype#Register('.l:config.')']
@@ -21,11 +21,11 @@ function! s:SerializeConfig(config)
     endfor
     return ['let s:lines = readfile(expand("<sfile>"))']
                 \+ l:sections
-                \+ ['unlet s:lines', 'unlet s:start']
+                \+ ['unlet s:start', 'unlet s:lines']
 endfunction
 
 function! Prototype#Register(config)
-    echomsg 'Registered:' a:config.name 'for' a:config.path 'from' a:config.start 'to' a:config.end
+    echomsg 'Registered:' a:config.name 'for' a:config.path
     let s:config = a:config
     echomsg a:config
 endfunction
