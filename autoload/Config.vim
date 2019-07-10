@@ -6,27 +6,20 @@ function! Config#Register(config)
     echomsg a:config
 endfunction
 
-function! s:SerializeSection(name, path, settings)
+function! s:Serialize(config)
+    let l:name = a:config.name
+    let l:path = a:config.path
+    let l:settings = a:config.settings
     let l:config = '{
-                \"name": "'.a:name.'", "path": "'.a:path.'",
-                \"Apply": funcref("s:'.a:name.'"),
+                \"name": "'.l:name.'", "path": "'.l:path.'",
+                \"Apply": funcref("s:'.l:name.'"),
                 \"settings": s:lines[s:start+1:expand("<slnum>")-3]
                 \}'
-    return ['let s:start = expand("<slnum>")']
-                \+ ['function! s:'.a:name.'()'] + a:settings + ['endfunction']
-                \+ ['call Config#Register('.l:config.')']
-endfunction
 
-function! s:Serialize(config)
-    let l:sections = []
-    for l:section in a:config
-        let l:name = l:section.name
-        let l:path = l:section.path
-        let l:settings = l:section.settings
-        let l:sections += s:SerializeSection(l:name, l:path, l:settings)
-    endfor
     return ['let s:lines = readfile(expand("<sfile>"))']
-                \+ l:sections
+                \+ ['let s:start = expand("<slnum>")']
+                \+ ['function! s:'.l:name.'()'] + l:settings + ['endfunction']
+                \+ ['call Config#Register('.l:config.')']
                 \+ ['unlet s:start', 'unlet s:lines']
 endfunction
 
@@ -35,7 +28,7 @@ function! Config#Load()
 endfunction
 
 function! Config#Save()
-    let l:config = [
+    let l:configs = [
                 \{
                     \'name': 'beep',
                     \'path': '/hello/beep',
@@ -45,8 +38,10 @@ function! Config#Save()
                     \'path': '/blub/world',
                     \'settings': ['echomsg "world"']
                 \}]
-    let l:template = readfile('templates/Config.vim')
-    let l:config = s:Serialize(l:config)
-    call writefile(l:config, 'config.vim')
+    let l:serialized = []
+    for l:config in l:configs
+        let l:serialized += s:Serialize(l:config)
+    endfor
+    call writefile(l:serialized, 'config.vim')
 endfunction
 
