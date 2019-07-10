@@ -1,30 +1,33 @@
-let s:Config = {}
+let s:Configs = {}
 
-function! Config#Register(config)
-    echomsg 'Registered:' a:config.name 'for' a:config.path
-    let s:Config = a:config
-    echomsg a:config
+function! Config#Register(config, path)
+    echomsg 'Registering:' a:config.name
+    call extend(s:Configs, {a:path: a:config})
 endfunction
 
 function! s:Serialize(config)
     let l:name = a:config.name
-    let l:path = a:config.path
     let l:settings = a:config.settings
     let l:config = '{
-                \"name": "'.l:name.'", "path": "'.l:path.'",
+                \"name": "'.l:name.'",
                 \"Apply": funcref("s:'.l:name.'"),
                 \"settings": s:lines[s:start+1:expand("<slnum>")-3]
                 \}'
+    let l:path = ['call Config#Register('.l:config.', "'.a:config.path.'")']
 
     return ['let s:lines = readfile(expand("<sfile>"))']
                 \+ ['let s:start = expand("<slnum>")']
                 \+ ['function! s:'.l:name.'()'] + l:settings + ['endfunction']
-                \+ ['call Config#Register('.l:config.')']
+                \+ l:path
                 \+ ['unlet s:start', 'unlet s:lines']
 endfunction
 
 function! Config#Load()
     source config.vim
+    for [l:path, l:config] in items(s:Configs)
+        echomsg 'Registered:' l:config.name 'for' l:path
+        echomsg l:config
+    endfor
 endfunction
 
 function! Config#Save()
