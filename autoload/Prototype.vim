@@ -1,8 +1,11 @@
 let s:Config = {}
 
 function! s:SerializeSection(name, path, settings)
-    "wrap settings in function body and add callback
-    let l:config = '{"name": "'.a:name.'", "path": "'.a:path.'", "Apply": funcref("s:'.a:name.'"), "start": s:start, "end": expand("<slnum>")}'
+    let l:config = '{
+                \"name": "'.a:name.'", "path": "'.a:path.'",
+                \"Apply": funcref("s:'.a:name.'"),
+                \"settings": s:lines[s:start+1:expand("<slnum>")-3],
+                \"start": s:start, "end": expand("<slnum>")}'
     return ['let s:start = expand("<slnum>")']
                 \+ ['function! s:'.a:name.'()'] + a:settings + ['endfunction']
                 \+ ['call Prototype#Register('.l:config.')']
@@ -16,13 +19,15 @@ function! s:SerializeConfig(config)
         let l:settings = l:section.settings
         let l:sections += s:SerializeSection(l:name, l:path, l:settings)
     endfor
-    return l:sections
+    return ['let s:lines = readfile(expand("<sfile>"))']
+                \+ l:sections
+                \+ ['unlet s:lines', 'unlet s:start']
 endfunction
 
 function! Prototype#Register(config)
     echomsg 'Registered:' a:config.name 'for' a:config.path 'from' a:config.start 'to' a:config.end
-    call a:config.Apply()
-    "let s:config = a:config
+    let s:config = a:config
+    echomsg a:config
 endfunction
 
 function! Prototype#Load()
