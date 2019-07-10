@@ -1,27 +1,28 @@
 let s:Configs = {}
 
-function! Config#Register(config, path)
+function! Config#Register(config)
     echomsg 'Registering:' a:config.name
-    call extend(s:Configs, {a:path: a:config})
+    let l:paths = a:config.paths
+    unlet a:config.paths
+    for l:path in l:paths
+        call extend(s:Configs, {l:path: a:config})
+    endfor
 endfunction
 
 function! s:Serialize(config)
     let l:name = a:config.name
+    let l:paths = a:config.paths
     let l:settings = a:config.settings
     let l:config = '{
                 \"name": "'.l:name.'",
+                \"paths": '.string(l:paths).',
                 \"Apply": funcref("s:'.l:name.'"),
                 \"settings": s:lines[s:start+1:expand("<slnum>")-3]
                 \}'
-    let l:paths = []
-    for l:path in a:config.paths
-        let l:paths += ['call Config#Register('.l:config.', "'.l:path.'")']
-    endfor
-
     return ['let s:lines = readfile(expand("<sfile>"))']
                 \+ ['let s:start = expand("<slnum>")']
                 \+ ['function! s:'.l:name.'()'] + l:settings + ['endfunction']
-                \+ l:paths
+                \+ ['call Config#Register('.l:config.')']
                 \+ ['unlet s:start', 'unlet s:lines']
 endfunction
 
