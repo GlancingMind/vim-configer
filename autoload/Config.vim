@@ -1,57 +1,52 @@
-let s:save_cpo = &cpo
-set cpo&vim
+let s:Config = {}
 
-let s:Config = {
-            \'root': '',
-            \'configs': {}
-            \}
-
-function! s:GetAllPossiblePaths(path)
-    let l:path = fnamemodify(a:path, ':h')
-    if a:path !=# l:path
-        return extend([a:path], s:GetAllPossiblePaths(l:path))
-    endif
-    return [l:path]
+function! Config#Register(config)
+    echomsg 'Registered:' a:config.name 'for' a:config.path
+    let s:Config = a:config
+    echomsg a:config
 endfunction
 
-function! Config#Load(path)
-    let l:self = copy(s:Config)
-    let l:self.root = a:path
-    if filereadable(a:path)
-        execute "let l:self.configs = ".readfile(a:path)[0]
-    endif
-    return l:self
+function! s:SerializeSection(name, path, settings)
+    let l:config = '{
+                \"name": "'.a:name.'", "path": "'.a:path.'",
+                \"Apply": funcref("s:'.a:name.'"),
+                \"settings": s:lines[s:start+1:expand("<slnum>")-3]
+                \}'
+    return ['let s:start = expand("<slnum>")']
+                \+ ['function! s:'.a:name.'()'] + a:settings + ['endfunction']
+                \+ ['call Config#Register('.l:config.')']
 endfunction
 
-function! s:Config.Save(settings, path) dict
-    let self.configs[a:path] = a:settings
-    let l:serialize = string(self.configs)
-    call writefile([serialize], self.root)
-endfunction
-
-function! s:Config.GetSettings(path) dict
-    return get(self.configs, resolve(a:path), [])
-endfunction
-
-function! s:Config.List() dict
-    return keys(self.configs)
-endfunction
-
-function! s:Config.GetAllConfigsForPath(path) dict
-    let l:configs = []
-    for l:path in s:GetAllPossiblePaths(resolve(a:path))
-        call extend(l:configs, get(self.configs, l:path, []))
+function! s:Serialize(config)
+    let l:sections = []
+    for l:section in a:config
+        let l:name = l:section.name
+        let l:path = l:section.path
+        let l:settings = l:section.settings
+        let l:sections += s:SerializeSection(l:name, l:path, l:settings)
     endfor
-    return l:configs
+    return ['let s:lines = readfile(expand("<sfile>"))']
+                \+ l:sections
+                \+ ['unlet s:start', 'unlet s:lines']
 endfunction
 
-function! s:Config.GetClosest(path) dict
-    for l:path in s:GetAllPossiblePaths(resolve(a:path))
-        if has_key(self.configs, l:path)
-            return l:path
-        endif
-    endfor
+function! Config#Load()
+    source config.vim
 endfunction
 
-let &cpo = s:save_cpo
-unlet s:save_cpo
+function! Config#Save()
+    let l:config = [
+                \{
+                    \'name': 'beep',
+                    \'path': '/hello/beep',
+                    \'settings': ['echomsg "hello"']
+                \}, {
+                    \'name': 'blub',
+                    \'path': '/blub/world',
+                    \'settings': ['echomsg "world"']
+                \}]
+    let l:template = readfile('templates/Config.vim')
+    let l:config = s:Serialize(l:config)
+    call writefile(l:config, 'config.vim')
+endfunction
+

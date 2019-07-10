@@ -14,16 +14,7 @@ let g:Configer_ConfigFilename = get(g:, 'Configer_ConfigFilename', fnamemodify(g
 
 "   ==== COMMANDS
 
-command! -complete=dir -nargs=* ConfigerEditConfig keepalt call Configer#ConfigEdit()
-
-command ConfigerApply call Configer#ApplyConfig()
-
-"   ==== AUTOCMDS
-
-augroup vim-configer
-    autocmd!
-    au! BufEnter * call Configer#ApplyConfig()
-augroup END
+command! -complete=dir -nargs=* ConfigerEditConfig keepalt call Config#Edit()
 
 let &cpo = s:save_cpo
 unlet s:save_cpo
