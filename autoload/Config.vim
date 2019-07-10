@@ -13,12 +13,15 @@ function! s:Serialize(config)
                 \"Apply": funcref("s:'.l:name.'"),
                 \"settings": s:lines[s:start+1:expand("<slnum>")-3]
                 \}'
-    let l:path = ['call Config#Register('.l:config.', "'.a:config.path.'")']
+    let l:paths = []
+    for l:path in a:config.paths
+        let l:paths += ['call Config#Register('.l:config.', "'.l:path.'")']
+    endfor
 
     return ['let s:lines = readfile(expand("<sfile>"))']
                 \+ ['let s:start = expand("<slnum>")']
                 \+ ['function! s:'.l:name.'()'] + l:settings + ['endfunction']
-                \+ l:path
+                \+ l:paths
                 \+ ['unlet s:start', 'unlet s:lines']
 endfunction
 
@@ -34,11 +37,11 @@ function! Config#Save()
     let l:configs = [
                 \{
                     \'name': 'beep',
-                    \'path': '/hello/beep',
+                    \'paths': ['/hello/beep', '/wonder/ful/world'],
                     \'settings': ['echomsg "hello"']
                 \}, {
                     \'name': 'blub',
-                    \'path': '/blub/world',
+                    \'paths': ['/blub/world'],
                     \'settings': ['echomsg "world"']
                 \}]
     let l:serialized = []
