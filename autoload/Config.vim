@@ -1,7 +1,6 @@
 let s:Configs = {}
 
 function! Config#Register(config)
-    echomsg 'Registering:' a:config.name
     let l:paths = a:config.paths
     unlet a:config.paths
     for l:path in l:paths
@@ -28,10 +27,6 @@ endfunction
 
 function! Config#Load()
     source config.vim
-    for [l:path, l:config] in items(s:Configs)
-        echomsg 'Registered:' l:config.name 'for' l:path
-        echomsg l:config
-    endfor
 endfunction
 
 function! Config#Save()
@@ -42,7 +37,7 @@ function! Config#Save()
                     \'settings': ['echomsg "hello"']
                 \}, {
                     \'name': 'blub',
-                    \'paths': ['/blub/world'],
+                    \'paths': ['autoload'],
                     \'settings': ['echomsg "world"']
                 \}]
     let l:serialized = []
@@ -50,5 +45,30 @@ function! Config#Save()
         let l:serialized += s:Serialize(l:config)
     endfor
     call writefile(l:serialized, 'config.vim')
+endfunction
+
+function! Config#Edit(...)
+    let l:path = get(a:, 1, g:Configer_EditConfigDefaultPath)
+    echomsg l:path
+    let l:settings = get(get(s:Configs, l:path, {}), 'settings', [])
+    execute 'edit' l:path.'-vimconfig'
+    normal! ggdG
+    call append(0, l:settings)
+    normal gg
+    "clear undo history to prevent user from undo append(0, l:settings)
+    "see :h clear-undo
+    let l:old_undolevels = &undolevels
+    setlocal undolevels=-1
+    execute "normal a \<BS>\<Esc>"
+    let &undolevels = l:old_undolevels
+    execute 'setlocal statusline=Edit\ config\ for:\ '.l:path
+    setlocal nomodified
+    setlocal noswapfile
+    setlocal buftype=acwrite
+    setlocal bufhidden=hide
+    setlocal filetype=vim
+    "on deleting this config buffer, wipe it instead to prevent user from
+    "switching via alternate file as this would reveal an empty buffer!
+    au! BufDelete <buffer> silent! $bwipeout
 endfunction
 
