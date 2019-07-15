@@ -1,5 +1,17 @@
 let s:Configs = []
 
+function! s:ExtractSettingsFromApplyFunction(config)
+    let l:funcdef = execute('function a:config.Apply', 'silent!')
+    echomsg l:funcdef
+    let l:funcbody = split(l:funcdef, '\n')[1:-2]
+    "strip linenumbers and indention from settings -> returning 'settings'
+    return map(l:funcbody, 'substitute(v:val, "\\d\\s*", "", "")')
+endfunction
+
+function! s:GetSettings(config)
+    return get(a:config, 'settings', s:ExtractSettingsFromApplyFunction(a:config))
+endfunction
+
 function! s:Serialize(configs)
     if empty(a:configs)
         return []
@@ -9,37 +21,33 @@ function! s:Serialize(configs)
     for l:config in a:configs
         let l:serializedConfig = '{
                     \"path": "'.l:config.path.'",
-                    \"Apply": funcref("s:Config'.l:id.'"),
-                    \"settings": s:lines[s:start+1:expand("<slnum>")-3]
+                    \"Apply": funcref("s:Config'.l:id.'")
                     \}'
-        let l:serialized += ['let s:start = expand("<slnum>")']
-                    \+ ['function! s:Config'.l:id.'()']
-                    \+ l:config.settings
+        let l:serialized += ['function! s:Config'.l:id.'()']
+                    \+ s:GetSettings(l:config)
                     \+ ['endfunction']
                     \+ ['call Config#Register('.l:serializedConfig.')']
         let l:id += 1
     endfor
-    return ['let s:lines = readfile(expand("<sfile>"))']
-            \+  l:serialized
-            \+  ['unlet s:start', 'unlet s:lines']
+    return l:serialized
 endfunction
 
 function! Config#Register(config)
-    "add config or override when already registered
+    "add config or override settings when config is already registered
     let l:config = Config#GetConfigByPath(a:config.path)
     if empty(l:config)
         call add(s:Configs, a:config)
     else
-        let l:config.settings = a:config.settings
+        let l:config.settings = s:GetSettings(a:config)
     endif
 endfunction
 
 function! Config#New(path, settings)
-    return {'path': a:path, 'settings': a:settings}
+    return {'path': resolve(a:path), 'settings': a:settings}
 endfunction
 
 function! Config#GetConfigByPath(path)
-    return get(filter(copy(s:Configs), 'v:val.path ==# a:path'), 0, {})
+    return get(filter(copy(s:Configs), 'v:val.path ==# resolve(a:path)'), 0, {})
 endfunction
 
 function! Config#List()
@@ -49,6 +57,7 @@ function! Config#List()
 endfunction
 
 function! Config#Load()
+    let s:Configs = []
     source config.vim
 endfunction
 
@@ -59,7 +68,7 @@ function! s:OnSaveConfig(path)
 
     "From here on, serialize all settings and write back to file
     "ignore configs containing no settings
-    let l:configs = filter(s:Configs, '!empty(join(v:val.settings))')
+    let l:configs = filter(s:Configs, '!empty(join(s:GetSettings(v:val)))')
     let l:serialized = s:Serialize(l:configs)
     if !empty(l:serialized)
         doautocmd BufWritePre
@@ -70,8 +79,8 @@ function! s:OnSaveConfig(path)
 endfunction
 
 function! Config#Edit(...)
-    let l:path = get(a:, 1, g:Configer_EditConfigDefaultPath)
-    let l:settings = get(Config#GetConfigByPath(l:path), 'settings', [])
+    let l:path = resolve(get(a:, 1, g:Configer_EditConfigDefaultPath))
+    let l:settings = s:GetSettings(Config#GetConfigByPath(l:path))
     execute 'edit' l:path.'-vimconfig'
     normal! ggdG
     call append(0, l:settings)
