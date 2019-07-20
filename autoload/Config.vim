@@ -111,3 +111,21 @@ function! Config#Checkpath()
     endfor
 endfunction
 
+function! Config#ApplysForPath(config, path)
+    return a:path =~# glob2regpat(a:config.glob)
+endfunction
+
+function! Config#GetConfigsForPath(path)
+    return filter(copy(s:Configs), 'Config#ApplysForPath(v:val, a:path)')
+endfunction
+
+function! Config#GetAllConfigsForPath(path)
+    let l:configs = Config#GetConfigsForPath(a:path)
+    let l:parent = fnamemodify(a:path, ':h')
+    echomsg a:path l:configs
+    if a:path ==# l:parent
+        return l:configs
+    endif
+    return l:configs + Config#GetAllConfigsForPath(l:parent)
+endfunction
+
