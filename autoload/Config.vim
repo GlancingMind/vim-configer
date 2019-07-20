@@ -34,7 +34,7 @@ endfunction
 
 function! Config#Register(config)
     "add config or override settings when config is already registered
-    let l:config = Config#GetConfigByGlob(a:config.glob)
+    let l:config = Config#GetConfigWithGlob(a:config.glob)
     if empty(l:config)
         call add(s:Configs, a:config)
     else
@@ -46,7 +46,7 @@ function! Config#New(glob, settings)
     return {'glob': resolve(a:glob), 'settings': a:settings}
 endfunction
 
-function! Config#GetConfigByGlob(glob)
+function! Config#GetConfigWithGlob(glob)
     return get(filter(copy(s:Configs), 'v:val.glob ==# resolve(a:glob)'), 0, {})
 endfunction
 
@@ -80,7 +80,7 @@ endfunction
 
 function! Config#Edit(...)
     let l:glob = resolve(get(a:, 1, g:Configer_EditConfigDefaultGlob))
-    let l:settings = s:GetSettings(Config#GetConfigByGlob(l:glob))
+    let l:settings = s:GetSettings(Config#GetConfigWithGlob(l:glob))
     execute 'edit' l:glob.'-vimconfig'
     normal! ggdG
     call append(0, l:settings)
