@@ -12,7 +12,7 @@ let g:Configer_DefaultStorage = get(g:, 'Configer_ConfigStoragePath', 'vimconfig
 
 let g:Configer_ConfigFilename = get(g:, 'Configer_ConfigFilename', fnamemodify(getcwd(), ':t'))
 
-let g:Configer_EditConfigDefaultPath = get(g:, 'Configer_EditConfigDefaultPath', expand('%'))
+let g:Configer_EditConfigDefaultGlob = get(g:, 'Configer_EditConfigDefaultGlob', expand('%'))
 
 "   ==== COMMANDS
 

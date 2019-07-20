@@ -20,7 +20,7 @@ function! s:Serialize(configs)
     let l:id = 0
     for l:config in a:configs
         let l:serializedConfig = '{
-                    \"path": "'.l:config.path.'",
+                    \"glob": "'.l:config.glob.'",
                     \"Apply": funcref("s:Config'.l:id.'")
                     \}'
         let l:serialized += ['function! s:Config'.l:id.'()']
@@ -34,7 +34,7 @@ endfunction
 
 function! Config#Register(config)
     "add config or override settings when config is already registered
-    let l:config = Config#GetConfigByPath(a:config.path)
+    let l:config = Config#GetConfigByGlob(a:config.glob)
     if empty(l:config)
         call add(s:Configs, a:config)
     else
@@ -42,12 +42,12 @@ function! Config#Register(config)
     endif
 endfunction
 
-function! Config#New(path, settings)
-    return {'path': resolve(a:path), 'settings': a:settings}
+function! Config#New(glob, settings)
+    return {'glob': resolve(a:glob), 'settings': a:settings}
 endfunction
 
-function! Config#GetConfigByPath(path)
-    return get(filter(copy(s:Configs), 'v:val.path ==# resolve(a:path)'), 0, {})
+function! Config#GetConfigByGlob(glob)
+    return get(filter(copy(s:Configs), 'v:val.glob ==# resolve(a:glob)'), 0, {})
 endfunction
 
 function! Config#List()
@@ -61,10 +61,10 @@ function! Config#Load()
     source config.vim
 endfunction
 
-function! s:OnSaveConfig(path)
+function! s:OnSaveConfig(glob)
     "update settings of current edited config
     let l:settings = getline(0, '$')
-    call Config#Register(Config#New(a:path, l:settings))
+    call Config#Register(Config#New(a:glob, l:settings))
 
     "From here on, serialize all settings and write back to file
     "ignore configs containing no settings
@@ -79,9 +79,9 @@ function! s:OnSaveConfig(path)
 endfunction
 
 function! Config#Edit(...)
-    let l:path = resolve(get(a:, 1, g:Configer_EditConfigDefaultPath))
-    let l:settings = s:GetSettings(Config#GetConfigByPath(l:path))
-    execute 'edit' l:path.'-vimconfig'
+    let l:glob = resolve(get(a:, 1, g:Configer_EditConfigDefaultGlob))
+    let l:settings = s:GetSettings(Config#GetConfigByGlob(l:glob))
+    execute 'edit' l:glob.'-vimconfig'
     normal! ggdG
     call append(0, l:settings)
     normal gg
@@ -91,13 +91,13 @@ function! Config#Edit(...)
     setlocal undolevels=-1
     execute "normal a \<BS>\<Esc>"
     let &undolevels = l:old_undolevels
-    execute 'setlocal statusline=Edit\ config\ for:\ '.l:path
+    execute 'setlocal statusline=Edit\ config\ for:\ '.l:glob
     setlocal nomodified
     setlocal noswapfile
     setlocal buftype=acwrite
     setlocal bufhidden=hide
     setlocal filetype=vim
-    execute 'au! BufWriteCmd <buffer> call s:OnSaveConfig("'.l:path.'")'
+    execute 'au! BufWriteCmd <buffer> call s:OnSaveConfig("'.l:glob.'")'
     "on deleting this config buffer, wipe it instead to prevent user from
     "switching via alternate file as this would reveal an empty buffer!
     au! BufDelete <buffer> silent! $bwipeout
@@ -105,8 +105,8 @@ endfunction
 
 function! Config#Checkpath()
     for l:config in s:Configs
-        if empty(glob(l:config.path, '', 1))
-            echomsg l:config.path
+        if empty(glob(l:config.glob, '', 1))
+            echomsg l:config.glob
         endif
     endfor
 endfunction
