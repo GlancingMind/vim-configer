@@ -103,3 +103,11 @@ function! Config#Edit(...)
     au! BufDelete <buffer> silent! $bwipeout
 endfunction
 
+function! Config#Checkpath()
+    for l:config in s:Configs
+        if empty(glob(l:config.path, '', 1))
+            echomsg l:config.path
+        endif
+    endfor
+endfunction
+
