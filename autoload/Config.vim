@@ -119,13 +119,48 @@ function! Config#GetConfigsForPath(path)
     return filter(copy(s:Configs), 'Config#ApplysForPath(v:val, a:path)')
 endfunction
 
-function! Config#GetAllConfigsForPath(path)
+function! Config#GetAllConfigsAlongPath(path)
     let l:configs = Config#GetConfigsForPath(a:path)
-    let l:parent = fnamemodify(a:path, ':h')
-    echomsg a:path l:configs
+    let l:parent = fnamemodify(resolve(a:path), ':h')
     if a:path ==# l:parent
         return l:configs
     endif
-    return l:configs + Config#GetAllConfigsForPath(l:parent)
+    return l:configs + Config#GetAllConfigsAlongPath(l:parent)
+endfunction
+
+function! Config#GetAbsolutePathDepth(path)
+    return len(split(fnamemodify(resolve(a:path), ':p'), '/'))
+endfunction
+
+"TODO works only for path with common base
+function! s:Compare(c1, c2)
+    if a:c1.glob ==# a:c2.glob
+        return 0
+    endif
+
+    if filereadable(a:c1.glob)
+        return 1
+    elseif filereadable(a:c2.glob)
+        return -1
+    endif
+    "if types are the same
+    let l:depth1 = Config#GetAbsolutePathDepth(a:c1.glob)
+    let l:depth2 = Config#GetAbsolutePathDepth(a:c2.glob)
+    return l:depth1 - l:depth2
+endfunction
+
+function! Config#ApplyAllConfigsAlongPath(path)
+    for l:config in sort(Config#GetAllConfigsAlongPath(a:path), 's:Compare')
+        try
+            call l:config.Apply()
+        catch
+            let l:ln = substitute(v:throwpoint, '.*\D\(\d\+\).*', '\1', "")
+            echohl ErrorMsg
+            echomsg 'Error in config:' l:config.glob 'at line:' l:ln
+            "print error without Vim(global):
+            echomsg join(split(v:exception, ':')[1:], ':')
+            echohl None
+        endtry
+    endfor
 endfunction
 
