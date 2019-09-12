@@ -10,14 +10,21 @@ set cpo&vim
 
 let g:Configer_DefaultStorage = get(g:, 'Configer_ConfigStoragePath', 'vimconfig')
 
-let g:Configer_ConfigFilename = get(g:, 'Configer_ConfigFilename', fnamemodify(getcwd(), ':t'))
+"let g:Configer_ConfigFilename = get(g:, 'Configer_ConfigFilename', fnamemodify(getcwd(), ':t'))
+let g:Configer_ConfigFilename = get(g:, 'Configer_ConfigFilename', 'config.vim')
 
 let g:Configer_EditConfigDefaultGlob = get(g:, 'Configer_EditConfigDefaultGlob', expand('%'))
 
 "   ==== COMMANDS
 
 command! -complete=file -nargs=* ConfigerEditConfig
-            \ keepalt call Config#Edit(<f-args>)
+            \ keepalt call Config#Load(g:Configer_ConfigFilename).Edit(<f-args>)
+
+"   ==== AUTOCMDS
+
+augroup vim-configer
+    autocmd BufNewFile,BufReadPost * call Config#Load(g:Configer_ConfigFilename)
+augroup END
 
 let &cpo = s:save_cpo
 unlet s:save_cpo
