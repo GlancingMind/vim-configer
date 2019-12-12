@@ -34,7 +34,7 @@ function! Config#Load(path)
     "setup autocmd for each config
     for l:config in l:self.List()
         let l:funcName = '<SNR>'.self.id.'_'.s:Encode(l:config).'()'
-        "define for each rule in config a autocmd under vim-configer augroup
+        "define for each rule in config an autocmd under vim-configer augroup
         augroup vim-configer
         execute 'autocmd! vim-configer BufEnter' l:config 'call' l:funcName
     endfor
@@ -46,10 +46,14 @@ function! s:Config.List() dict
     return map(l:functions, 's:Decode(s:ExtractFunctionName(v:val))')
 endfunction
 
-function! s:Config.Serialize(path) dict
-    return ['function! s:'.s:Encode(a:path).'()']
-                \+ self.GetSettings(a:path)
-                \+ ['endfunction']
+function! s:Config.Serialize() dict
+    let l:configs = []
+    for l:config in self.List()
+        let l:configs += ['function! s:'.s:Encode(l:config).'()']
+                    \+ self.GetSettings(l:config)
+                    \+ ['endfunction']
+    endfor
+    return l:configs
 endfunction
 
 function! s:Config.Save(path, settings) dict
@@ -58,11 +62,7 @@ function! s:Config.Save(path, settings) dict
                 \+ a:settings
                 \+ ['endfunction'], "\n"))
     "take all functions and write them back to file
-    let l:configs = []
-    for l:config in self.List()
-        let l:configs += self.Serialize(l:config)
-    endfor
-    call writefile(l:configs, self.root)
+    call writefile(self.Serialize(), self.root)
 endfunction
 
 function! s:Config.GetSettings(path) dict
