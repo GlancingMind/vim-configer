@@ -32,7 +32,11 @@ function! Config#Load(path)
     endif
 
     "setup autocmd for each config
-    for l:config in l:self.List()
+    "using sort to force registration of autocmds according to their path
+    "this will determine the execution order of the configs!
+    "e.g. *.vim -> plugin/* -> plugin/Config.vim
+    for l:config in sort(l:self.List())
+        echomsg "register:" l:config
         let l:funcName = '<SNR>'.self.id.'_'.s:Encode(l:config).'()'
         "define for each rule in config an autocmd under vim-configer augroup
         augroup vim-configer
