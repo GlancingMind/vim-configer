@@ -42,9 +42,7 @@ function! Config#Load(path)
 endfunction
 
 function! s:Config.List() dict
-    "letting vim prefilter configs isn't required but shouldn't hurt either
     let l:functions = split(execute('function /'.self.id), '\n')
-    let l:functions = filter(l:functions, 'v:val =~# "<SNR>".self.id')
     return map(l:functions, 's:Decode(s:ExtractFunctionName(v:val))')
 endfunction
 
