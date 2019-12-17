@@ -20,6 +20,12 @@ let g:Configer_EditConfigDefaultGlob = get(g:, 'Configer_EditConfigDefaultGlob',
 command! -complete=file -nargs=* ConfigerEditConfig
             \ keepalt call Config#Load(g:Configer_ConfigFilename).Edit(<f-args>)
 
+command! -complete=file -nargs=* ConfigerDeleteConfig
+            \ call Config#Load(g:Configer_ConfigFilename).Unload(<f-args>)
+
+command! -complete=file ConfigerReloadConfig
+            \ call Config#Load(g:Configer_ConfigFilename).Reload()
+
 "   ==== AUTOCMDS
 
 augroup vim-configer

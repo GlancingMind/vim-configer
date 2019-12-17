@@ -6,8 +6,8 @@ let s:Config = {
 function! s:GetScriptNumber(scriptname)
     let l:scripts = split(execute('scriptnames'), "\n")
     let l:scriptname = fnamemodify(a:scriptname, ":~")
-    let l:script = filter(l:scripts, 'v:val =~# "\\".l:scriptname."$"')[0]
-    return trim(split(l:script, ':')[0])
+    let l:script = get(filter(l:scripts, 'v:val =~# "\\".l:scriptname."$"'), 0, "")
+    return trim(get(split(l:script, ':'), 0, -1))
 endfunction
 
 function! s:ExtractFunctionName(func)
@@ -23,12 +23,15 @@ function! s:Decode(string)
     return eval('"'.substitute(a:string, '_\d\+_', '".nr2char("&"[1:-2])."', 'g').'"')
 endfunction
 
-function! Config#Load(path)
+function! Config#Load(path, ...)
+    let l:force = get(a:, 1, 0)
     let l:self = copy(s:Config)
     let l:self.root = fnamemodify(a:path, ":p")
+    let l:self.id = s:GetScriptNumber(l:self.root)
     if filereadable(l:self.root)
-        execute 'source '.l:self.root
-        let l:self.id = s:GetScriptNumber(l:self.root)
+        if l:self.id == -1 || l:force == 1
+            execute 'source '.l:self.root
+        endif
     endif
 
     "setup autocmd for each config
@@ -36,7 +39,6 @@ function! Config#Load(path)
     "this will determine the execution order of the configs!
     "e.g. *.vim -> plugin/* -> plugin/Config.vim
     for l:config in sort(l:self.List())
-        echomsg "register:" l:config
         let l:funcName = '<SNR>'.self.id.'_'.s:Encode(l:config).'()'
         "define for each rule in config an autocmd under vim-configer augroup
         augroup vim-configer
@@ -51,11 +53,11 @@ function! s:Config.List() dict
 endfunction
 
 function! s:Config.Serialize() dict
-    let l:configs = [
-                \'if exists("s:ConfigLoaded")',
-                \'  finish',
-                \'endif',
-                \'let s:ConfigLoaded = 1']
+    let l:configs = []
+                "\'if exists("s:ConfigLoaded")',
+                "\'  finish',
+                "\'endif',
+                "\'let s:ConfigLoaded = 1']
     for l:config in self.List()
         let l:configs += ['function! s:'.s:Encode(l:config).'()']
                     \+ self.GetSettings(l:config)
@@ -64,8 +66,27 @@ function! s:Config.Serialize() dict
     return l:configs
 endfunction
 
+function! s:Config.Unload(path) dict
+    let l:path = resolve(a:path)
+    for l:config in filter(self.List(), 'v:val ==# l:path')
+        let l:funcName = '<SNR>'.self.id.'_'.s:Encode(l:config)
+        "remove all autocmds for this config
+        execute 'autocmd! vim-configer BufEnter' l:config
+        "delete all functions for this config
+        execute 'delfunction!' l:funcName
+    endfor
+endfunction
+
+function! s:Config.Reload() dict
+    for l:config in self.List()
+        call self.Unload(l:config)
+    endfor
+    "force reload of config!
+    call Config#Load(self.root, 1)
+endfunction
+
 function! s:Config.Save(path, settings) dict
-    "update settings in vim
+    "enter new settings in vim
     call execute(join(['function! <SNR>'.self.id.'_'.s:Encode(a:path).'()']
                 \+ a:settings
                 \+ ['endfunction'], "\n"))
