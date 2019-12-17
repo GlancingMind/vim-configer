@@ -51,7 +51,11 @@ function! s:Config.List() dict
 endfunction
 
 function! s:Config.Serialize() dict
-    let l:configs = []
+    let l:configs = [
+                \'if exists("s:ConfigLoaded")',
+                \'  finish',
+                \'endif',
+                \'let s:ConfigLoaded = 1']
     for l:config in self.List()
         let l:configs += ['function! s:'.s:Encode(l:config).'()']
                     \+ self.GetSettings(l:config)
