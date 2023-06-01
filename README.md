@@ -8,7 +8,7 @@ This file will be sourced by vim automatically, but the settings won't be applie
 
 ## Example
 
-Makefile rules have to be indented via tabs instead of spaces. Therefore following `noexpandtab` should be applied to all makefiles.
+Makefile rules have to be indented via tabs instead of spaces. Therefore `noexpandtab` should be applied to all makefiles.
 To register this setting for all makefiles, call `ConfigerEditConfig <file-/buffer-name glob>`.
 E.g. `ConfigerEditConfig makefile`.
 
