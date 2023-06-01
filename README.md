@@ -20,7 +20,7 @@ setlocal noexpandtab
 
 After saving the buffer, configer will write the settings to the respective global/project-config and applies `noexpandtab` everytime a `makefile`-buffer is read or created.
 
-Notive: When invoking `ConfigerEditConfig makefile` again, the previously entered settings can be edited.
+Notice: When invoking `ConfigerEditConfig makefile` again, the previously entered settings can be edited (as the name suggests).
 
 # Commands (so far)
 
